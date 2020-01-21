@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/SolanaFish/wp_terminator/issues"
   },
-  "homepage": "https://github.com/SolanaFish/wp_terminator#readme"
+  "homepage": "https://github.com/SolanaFish/wp_terminator#readme",
+  "dependencies": {
+    "joystick": "git+https://github.com/JayBeavers/node-joystick.git"
+  }
 }
