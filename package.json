@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "serial": "node src/serial.js"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,7 @@
   },
   "homepage": "https://github.com/SolanaFish/wp_terminator#readme",
   "dependencies": {
-    "joystick": "git+https://github.com/JayBeavers/node-joystick.git"
+    "joystick": "git+https://github.com/JayBeavers/node-joystick.git",
+    "serialport": "^8.0.6"
   }
 }
