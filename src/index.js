@@ -53,6 +53,9 @@ function sendWheelsData() {
       }
 
     portLU.write(wheelsData[0]);
+    portRU.write(wheelsData[1]);
+    portLB.write(wheelsData[2]);
+    portRB.write(wheelsData[3]);
     console.log(`Sending out the wheel serial port`, wheelsData);
   }
 
