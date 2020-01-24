@@ -15,16 +15,49 @@ console.log(portLU);
 
 const maxSpeed = 30; // 30 cm/s ~ 1km/h
 
-let wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
-
 function openWheelPort() {
   console.log('port open', portLU);
   // since you only send data when the port is open, this function
   // is local to the openPort() function:
   function sendWheelsData() {
     // convert the value to an ASCII string before sending it:
+    let wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
+
+    if (values[0] < values[1]) {
+        // pure left - rotate in place
+        if (values[1] === 0.5) {
+          force = parseInt((1 - values[0]) * maxSpeed);
+          wheelsData = [`!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`];
+        }
+        // pure down
+        if (values[0] === 0.5) {
+          force = parseInt((values[1])*maxSpeed);
+          wheelsData = [`!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`];
+        }
+      }
+      if (values[0] > values[1]) {
+        // pure forward
+        if (values[0] === 0.5) {
+          force = parseInt((1 - values[1]) * maxSpeed);
+          wheelsData = [`!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`];
+        }
+        // pure right
+        if (values[1] === 0.5) {
+          force = parseInt((values[0]) * maxSpeed);
+          wheelsData = [`!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`];
+        }
+      }
+      // reset
+      if (values[0] === 0.5 && values[1] === 0.5) {
+        wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
+        //console.log('portleftup', '!0;0;0');
+        //console.log('portleftbottom', '!0;0;0');
+        //console.log('portrightup', '!0;0;0');
+        //console.log('portrightbottom', '!0;0;0');
+      }
+
     portLU.write(wheelsData[0]);
-    console.log(`Sending out the wheel serial port`, wheelsData);    
+    console.log(`Sending out the wheel serial port`, wheelsData);
 
     //portRU.write(wheelsData[1]);
     //portLB.write(wheelsData[2]);
@@ -59,40 +92,7 @@ const receiveInput = data => {
   values[data.number] = (data.value + 32767) / (2 * 32767);
   //console.log(values[0], values[1], values[0] + (-values[1]));
   // handling left side, left and down:
-  if (values[0] < values[1]) {
-    // pure left - rotate in place
-    if (values[1] === 0.5) {
-      force = parseInt((1 - values[0]) * maxSpeed);
-      wheelsData = [`!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`];
-    }
-    // pure down
-    if (values[0] === 0.5) {
-      force = parseInt((values[1])*maxSpeed);
-      wheelsData = [`!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`];
-    }
-  }
-  if (values[0] > values[1]) {
-    // pure forward
-    if (values[0] === 0.5) {
-      force = parseInt((1 - values[1]) * maxSpeed);
-      wheelsData = [`!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`];
-    }
-    // pure right
-    if (values[1] === 0.5) {
-      force = parseInt((values[0]) * maxSpeed);
-      wheelsData = [`!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`];
-    }
-  }
-  // reset
-  if (values[0] === 0.5 && values[1] === 0.5) {
-    wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
-    //console.log('portleftup', '!0;0;0');
-    //console.log('portleftbottom', '!0;0;0');
-    //console.log('portrightup', '!0;0;0');
-    //console.log('portrightbottom', '!0;0;0');
-  }
   console.log(wheelsData);
 }
 
 controller.on('axis', receiveInput);
-
