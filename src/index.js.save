@@ -1,0 +1,112 @@
+const Joystick = require('joystick');
+const SerialPort = require('serialport')
+
+const controller = new Joystick(0, 3500, 10);
+const portName = '/dev/ttyUSB0' // get the port name from the command line
+const portName1 = '/dev/ttyUSB1'
+const portName2 = '/dev/ttyUSB2'
+const portName3 = '/dev/ttyUSB3'
+const myPort = new SerialPort(portName, 9600); // open the port
+const myPort1 = new SerialPort(portName1, 9600);
+const myPort2 = new SerialPort(portName2, 9600);
+const myPort3 = new SerialPort(portName3, 9600);
+
+const maxSpeed = 30; // 30 cm/s ~ 1km/h
+
+function openPort() {
+  let brightness = 0; // the brightness to send for the LED
+  console.log('port open', myPort);
+
+  // since you only send data when the port is open, this function
+  // is local to the openPort() function:
+  function sendData() {
+    // convert the value to an ASCII string before sending it:
+    myPort.write('d');
+    console.log(`Sending ${brightness} out the serial port`);
+  }
+  // set an interval to update the brightness 2 times per second:
+  setInterval(sendData, 5000);
+
+}
+// !0;cm/s;dir#
+// dir - 1 albo 0
+// !0... - move !1... - rotate
+myPort.on('open', openPort);
+
+let values = {
+  0: 0,
+  1: 1,
+}
+
+const test2 = data => {
+  let rotateOrMove = 0;
+  let speed = .0;
+  let dir = 0;
+  // !rotateOrMove;speed;dir#
+  // axis have to handle moving only
+  values[data.number] = (data.value + 32767)/(2*32767);
+  console.log(values[0], values[1], values[0]+(-values[1]));
+  if (values[0] < values[1]) {
+    // handling left side, left and down
+    // pure left - rotate in place
+    if (values[1] === 0.5) {
+      let force = (1-values[0])*maxSpeed;
+      console.log('portleftup', `!0;${force};1`);
+      console.log('portleftbottom', `!0;${force};1`);
+      console.log('portrightup', `!0;${force};0`);
+      console.log('portrightbottom', `!0;${force};0`);
+    }
+    // pure down
+    if (values[0] === 0.5) {
+      let force = (values[1])*maxSpeed;
+      console.log('portleftup', `!0;${force};0`);
+      console.log('portleftbottom', `!0;${force};0`);
+      console.log('portrightup', `!0;${force};0`);
+      console.log('portrightbottom', `!0;${force};0`);
+    }
+  }
+  if (values[0] > values[1]) {
+    // pure forward
+    if (values[0] === 0.5) {
+      let force = (1-values[1])*maxSpeed;
+      let myPort = new SerialPort(portName, 9600);
+      // !0;cm/s;dir#
+      // dir - 1 albo 0
+      // !0... - move !1... - rotate
+      myPort.on('open', openPort);
+      myPort.write(`!0;${force};1`);
+// since you only send data when the port is open, this function
+  // is local to the openPort() function:
+  function sendData() {
+    // convert the value to an ASCII string before sending it:
+    myPort.write('d');
+    console.log(`Sending ${brightness} out the serial port`);
+  }
+  // set an interval to update the brightness 2 times per second:
+      console.log('portleftup', `!0;${force};1`);
+      console.log('portleftbottom', `!0;${force};1`);
+      console.log('portrightup', `!0;${force};1`);
+      console.log('portrightbottom', `!0;${force};1`);
+    }
+    // pure right
+    if (values[1] === 0.5) {
+      let force = (values[0])*maxSpeed;
+      console.log('portleftup', `!0;${force};0`);
+      console.log('portleftbottom', `!0;${force};0`);
+      console.log('portrightup', `!0;${force};1`);
+      console.log('portrightbottom', `!0;${force};1`);
+    }
+  }
+  // reset
+  if (values[0] === 0.5 && values[1] === 0.5) {
+    console.log('portleftup', '!0;0;0');
+    console.log('portleftbottom', '!0;0;0');
+    console.log('portrightup', '!0;0;0');
+    console.log('portrightbottom', '!0;0;0');
+  }
+  // speed =  / 250;
+}
+
+//setInterval(() => {console.log(values)}, 100);
+
+controller.on('axis', test2);
