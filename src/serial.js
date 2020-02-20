@@ -12,7 +12,7 @@ const myPort = new SerialPort(portName, 9600);// open the port
 function openPort() {
   let brightness = 0; // the brightness to send for the LED
   console.log('port open', myPort);
-  //console.log(`baud rate: ${myPort.options.baudRate}`);
+  //console.log(`baud rate: ${myPort.options.bXaudRate}`);
 
   // since you only send data when the port is open, this function
   // is local to the openPort() function:

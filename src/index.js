@@ -14,70 +14,122 @@ const portRU = new SerialPort(wheelRU, baudRate); // open the port
 const portLB = new SerialPort(wheelLB, baudRate); // open the port
 const portRB = new SerialPort(wheelRB, baudRate); // open the port
 
-const maxSpeed = 30; // 30 cm/s ~ 1km/h
-
 function openWheelPort() {
   console.log('port open');
 }
 
-function sendWheelsData() {
-    let wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
+const maxSpeed = 9;
 
-    if (values[0] < values[1]) {
-        // pure left - rotate in place
-        if (values[1] === 0.5) {
-          force = parseInt((1 - values[0]) * maxSpeed);
-          wheelsData = [`!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`];
-        }
-        // pure down
-        if (values[0] === 0.5) {
-          force = parseInt((values[1])*maxSpeed);
-          wheelsData = [`!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`];
-        }
-      }
-      if (values[0] > values[1]) {
-        // pure forward
-        if (values[0] === 0.5) {
-          force = parseInt((1 - values[1]) * maxSpeed);
-          wheelsData = [`!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`];
-        }
-        // pure right
-        if (values[1] === 0.5) {
-          force = parseInt((values[0]) * maxSpeed);
-          wheelsData = [`!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`];
-        }
-      }
-      // reset
-      if (values[0] === 0.5 && values[1] === 0.5) {
-        wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
-      }
+function sendWheelsData() {
+let wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
+
+let speed = 1;
+let rightWheelsSpeed = 0;
+let leftWheelsSpeed = 0;
+let dir = 1;
+
+if (lastData[1] < 0.5) {
+  // move forward
+  speed = Math.floor((1 - lastData[1]) * maxSpeed);
+  dir = 1;
+} else if (lastData[1] > 0.5) {
+  // move back
+  speed = Math.floor(lastData[1] * maxSpeed);
+  dir = 0;
+} else {
+  speed = 0;
+}
+
+if (lastData[0] > 0.5) {
+  // move right
+  rightWheelsSpeed = Math.floor(lastData[0] * maxSpeed); 
+} else if (lastData[0] < 0.5) {
+  // move left
+  leftWheelsSpeed = Math.floor((1 - lastData[0]) * maxSpeed);
+}
+
+wheelsData = [`!${rightWheelsSpeed || speed};${dir}#`, `!${leftWheelsSpeed || speed};${dir}#`, `!${rightWheelsSpeed || speed};${dir}#`, `!${leftWheelsSpeed || speed};${dir}#`];
+console.log(wheelsData);
+/*
+
+if (lastData[0] < lastData[1]) {
+  // pure left - rotate in place
+  if (lastData[1] === 0.5) {
+    force = parseInt((1 - lastData[0]) * maxSpeed);
+    wheelsData = [`!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`];
+  }
+
+  // pure down
+  if (lastData[0] === 0.5) {
+    force = parseInt((lastData[1])*maxSpeed);
+    wheelsData = [`!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`, `!0;${force};0#`];
+  }
+}
+
+if (lastData[0] > lastData[1]) {
+  // pure forward
+  if (lastData[0] === 0.5) {
+    force = parseInt((1 - lastData[1]) * maxSpeed);
+    wheelsData = [`!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`, `!0;${force};1#`];
+  }
+
+  // pure right
+  if (lastData[1] === 0.5) {
+    force = parseInt((lastData[0]) * maxSpeed);
+    wheelsData = [`!0;${force};0#`, `!0;${force};1#`, `!0;${force};0#`, `!0;${force};1#`];
+  }
+}
+
+*/
+
+// reset
+if (lastData[0] === 0.5 && lastData[1] === 0.5) {
+  wheelsData = ['!0;0;0#', '!0;0;0#', '!0;0;0#', '!0;0;0#'];
+}
+
 
     portLU.write(wheelsData[0]);
     portRU.write(wheelsData[1]);
     portLB.write(wheelsData[2]);
     portRB.write(wheelsData[3]);
-    console.log(`Sending out the wheel serial port`, wheelsData);
   }
 
-  setTimeout(() => {
-    setInterval(sendWheelsData, 100);
-  }, 5000);
-
-// !0;cm/s;dir#
-// dir - 1 albo 0
-// !0... - move !1... - rotate
 portLU.on('open', openWheelPort);
 portRU.on('open', openWheelPort);
 portLB.on('open', openWheelPort);
 portRB.on('open', openWheelPort);
 
-let values = {
-  0: 0,
-  1: 1,
+let lastData = {
+  0: 0.5,
+  1: 0.5,
+}
+
+let currentData = {
+  0: 0.5,
+  1: 0.5,
+}
+
+const sendData = () => {
+  if (lastData[0] !== currentData[0]) {
+    lastData[0] = currentData[0];
+    //console.log('horizontal move');
+    sendWheelsData();
+  } else if (lastData[1] !== currentData[1]) {
+    lastData[1] = currentData[1];
+    //console.log('vertical move');
+    sendWheelsData();
+  } else {
+    //console.log('no move');
+  }
+
 }
 
 const receiveInput = data => {
-  values[data.number] = (data.value + 32767) / (2 * 32767);
+  if (parseInt(data.number) < 2) {
+    currentData[data.number] = parseFloat(((data.value + 32767) / (2 * 32767)).toFixed(1)); //parseuje do 2 miejsce po przecinku
+  }
 }
 
 controller.on('axis', receiveInput);
+
+setInterval(sendData, 500);
